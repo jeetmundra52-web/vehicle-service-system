@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import './Login.css';
+import API_URL from '../config';
 
 const Login = ({ onLogin }) => {
     const [email, setEmail] = useState('');
@@ -14,7 +13,7 @@ const Login = ({ onLogin }) => {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3000/api/login', {
+            const response = await fetch(`${API_URL}/api/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

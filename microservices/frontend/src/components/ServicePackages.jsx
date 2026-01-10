@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './ServicePackages.css';
+import API_URL from '../config';
 
 const ServicePackages = () => {
   // Service packages data array
@@ -88,7 +89,7 @@ const ServicePackages = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/bookService', {
+      const response = await fetch(`${API_URL}/api/bookService`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './BookingsList.css';
+import API_URL from '../config';
 
 const BookingsList = () => {
     const [bookings, setBookings] = useState([]);
@@ -8,7 +9,7 @@ const BookingsList = () => {
 
     const fetchBookings = async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/bookings');
+            const response = await fetch(`${API_URL}/api/bookings`);
             const data = await response.json();
 
             if (response.ok) {
