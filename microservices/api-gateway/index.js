@@ -4,7 +4,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const client = require('prom-client');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Prometheus Metrics Setup
 const collectDefaultMetrics = client.collectDefaultMetrics;
@@ -22,22 +22,25 @@ app.get('/health', (req, res) => {
     res.json({ status: 'API Gateway OK' });
 });
 
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://auth-service:3001';
+const BOOKING_SERVICE_URL = process.env.BOOKING_SERVICE_URL || 'http://booking-service:3002';
+
 // Auth Service Routes
 const authProxy = createProxyMiddleware({
-    target: 'http://auth-service:3001',
+    target: AUTH_SERVICE_URL,
     changeOrigin: true,
     onProxyReq: (proxyReq, req, res) => {
-        console.log(`Auth Proxy: ${req.method} ${req.originalUrl}`);
+        console.log(`Auth Proxy: ${req.method} ${req.url} -> ${AUTH_SERVICE_URL}`);
     }
 });
 app.use(['/api/login', '/api/register'], authProxy);
 
 // Booking Service Routes
 const bookingProxy = createProxyMiddleware({
-    target: 'http://booking-service:3002',
+    target: BOOKING_SERVICE_URL,
     changeOrigin: true,
     onProxyReq: (proxyReq, req, res) => {
-        console.log(`Booking Proxy: ${req.method} ${req.originalUrl}`);
+        console.log(`Booking Proxy: ${req.method} ${req.url} -> ${BOOKING_SERVICE_URL}`);
     }
 });
 app.use(['/api/bookings', '/api/bookService'], bookingProxy);
