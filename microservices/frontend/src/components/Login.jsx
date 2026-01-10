@@ -1,0 +1,108 @@
+import { useState } from 'react';
+import './Login.css';
+
+const Login = ({ onLogin }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            const response = await fetch('http://localhost:3000/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Store token and user info
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                onLogin(data.user);
+            } else {
+                setError(data.error || 'Invalid email or password');
+            }
+        } catch (err) {
+            setError('Could not connect to the server. Please try again later.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="login-page">
+            <div className="login-card">
+                <div className="login-header">
+                    <div className="login-logo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                    <h1>Login to Your Account</h1>
+                    <p>Access your bookings and services</p>
+                </div>
+
+                <form className="login-form" onSubmit={handleSubmit}>
+                    {error && <div className="login-error-message">{error}</div>}
+
+                    <div className="input-group">
+                        <label htmlFor="email">Email / Username</label>
+                        <input
+                            id="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <div className="input-group">
+                        <label htmlFor="password">Password</label>
+                        <div className="password-input-wrapper">
+                            <input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="toggle-password"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? "👁️" : "👁️‍🗨️"}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="form-options">
+                        <a href="#" onClick={(e) => e.preventDefault()}>Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" className="login-submit-btn" disabled={loading}>
+                        {loading ? 'Logging in...' : 'Login'}
+                    </button>
+
+                    <div className="login-footer">
+                        Don't have an account? <a href="#" onClick={(e) => e.preventDefault()}>Register</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default Login;

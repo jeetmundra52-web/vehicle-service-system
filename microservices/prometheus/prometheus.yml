@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:3000']
+        labels:
+          service: 'api-gateway'
+
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:3001']
+        labels:
+          service: 'auth-service'
+
+  - job_name: 'booking-service'
+    static_configs:
+      - targets: ['booking-service:3002']
+        labels:
+          service: 'booking-service'

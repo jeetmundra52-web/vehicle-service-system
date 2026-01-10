@@ -1,0 +1,118 @@
+---
+- name: Deploy Vehicle Service System
+  hosts: webservers
+  become: true
+
+  vars:
+    project_dir: /home/vboxuser/vehicle-service-system
+
+  tasks:
+
+    # 1️⃣ Remove any old/conflicting Docker packages
+    - name: Remove Ubuntu Docker packages (if present)
+      apt:
+        name:
+          - docker.io
+          - docker-doc
+          - docker-compose
+          - podman-docker
+        state: absent
+      ignore_errors: yes
+
+    # 2️⃣ Install prerequisites
+    - name: Install prerequisite packages
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - rsync
+        state: present
+        update_cache: yes
+
+    # 3️⃣ Add Docker official GPG key
+    - name: Add Docker GPG key
+      shell: |
+        mkdir -p /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+        | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
+
+    # 4️⃣ Add Docker official repository
+    - name: Add Docker official repository
+      shell: |
+        echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+        https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) stable" \
+        > /etc/apt/sources.list.d/docker.list
+
+    # 5️⃣ Install Docker CE + Compose v2 plugin
+    - name: Install Docker Engine and Docker Compose v2
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    # 6️⃣ Stop Docker (safe cleanup step)
+    - name: Stop Docker service (cleanup)
+      service:
+        name: docker
+        state: stopped
+      ignore_errors: yes
+
+    # 7️⃣ Remove old containerd state (CRITICAL FIX)
+    - name: Remove old containerd state
+      file:
+        path: /var/lib/containerd
+        state: absent
+
+    # 8️⃣ Start Docker cleanly
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    # 9️⃣ Create project directory
+    - name: Ensure project directory exists
+      file:
+        path: "{{ project_dir }}"
+        state: directory
+        owner: vboxuser
+        group: vboxuser
+        mode: '0755'
+
+    # 🔟 Synchronize project files (NO sudo, NO hang)
+    - name: Synchronize project files to server
+      become: false
+      synchronize:
+        src: "{{ playbook_dir }}/../"
+        dest: "{{ project_dir }}/"
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--exclude=node_modules"
+          - "--exclude=.git"
+
+    # Debug: Check file structure
+    - name: List files in project directory
+      command: ls -R {{ project_dir }}
+      register: dir_structure
+
+    - name: Show file structure
+      debug:
+        var: dir_structure.stdout_lines
+
+    # 1️⃣1️⃣ Build and start containers (Docker Compose v2)
+    - name: Build and start containers
+      shell: docker compose -f docker-compose.yml up -d --build
+      args:
+        chdir: "{{ project_dir }}"
+
