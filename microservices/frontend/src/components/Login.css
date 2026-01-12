@@ -189,6 +189,28 @@
     text-decoration: underline;
 }
 
+.login-footer .link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--primary-color);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-family: inherit;
+    text-decoration: none;
+}
+
+.login-footer .link-button:hover {
+    text-decoration: underline;
+}
+
+.login-error-message.success {
+    background-color: #dcfce7;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
 @media (max-width: 480px) {
     .login-card {
         padding: 1.5rem;
