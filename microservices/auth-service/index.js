@@ -59,6 +59,11 @@ app.post('/api/register', async (req, res) => {
         const newUser = await User.create({ name, email, password });
         res.status(201).json({ success: true, user: { id: newUser._id, name: newUser.name, email: newUser.email } });
     } catch (error) {
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(val => val.message);
+            return res.status(400).json({ success: false, error: messages.join(', ') });
+        }
+        console.error('Registration error:', error);
         res.status(500).json({ success: false, error: 'Server error' });
     }
 });
